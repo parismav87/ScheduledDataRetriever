@@ -1,0 +1,12 @@
+<http://inlife-1.inab.certh.gr:8080/inlife/api/data/Patient/6ea6995e-f011-4277-92ce-d1342ca7c121/QuestionnaireAnswers>
+        a       <http://www.w3.org/1999/02/22-rdf-syntax-ns#Bag> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#_1>
+                <http://inlife-1.inab.certh.gr:8080/inlife/api/data/QuestionnaireAnswers/223ac4f8-8718-4f0b-b4df-ae8e31b58fcf> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#_2>
+                <http://inlife-1.inab.certh.gr:8080/inlife/api/data/QuestionnaireAnswers/9ce45a0f-2c5d-4d33-a693-9cd78b8eb093> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#_3>
+                <http://inlife-1.inab.certh.gr:8080/inlife/api/data/QuestionnaireAnswers/e2a12714-a8a1-4988-8593-0c80f0e08239> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#_4>
+                <http://inlife-1.inab.certh.gr:8080/inlife/api/data/QuestionnaireAnswers/e2f61543-49fb-4fff-b55f-7f7ccefef230> ;
+        <http://www.w3.org/1999/02/22-rdf-syntax-ns#_5>
+                <http://inlife-1.inab.certh.gr:8080/inlife/api/data/QuestionnaireAnswers/fb32abf1-3e6d-4ac7-b486-ff92827a24d4> .
