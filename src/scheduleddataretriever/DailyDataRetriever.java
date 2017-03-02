@@ -158,7 +158,7 @@ public class DailyDataRetriever {
         }
 
         // get patient questionnaire answers every day.
-        InputStream questionnaires = getQuestionnaires("6ea6995e-f011-4277-92ce-d1342ca7c121", yesterdayMorningMillis);
+        InputStream questionnaires = getQuestionnaires(UUID, yesterdayMorningMillis);
         parseQuestionnaires(questionnaires);
     }
 
@@ -213,7 +213,6 @@ public class DailyDataRetriever {
     InputStream getQuestionnaires(String UUID, long start) throws IOException, FileNotFoundException {
 //        InputStream is = new FileInputStream("data.ttl");
 //        return is;
-        System.out.println("start   "+start);
         Calendar moment = Calendar.getInstance();
         moment.setTimeInMillis(start);
         String year = String.valueOf(moment.get(Calendar.YEAR));
@@ -224,6 +223,7 @@ public class DailyDataRetriever {
         day = "0" + day;
         day = day.substring(day.length()-2,day.length());
         String startString = year +"-"+month+"-"+day;
+        
         String URL = "http://inlife-1.inab.certh.gr:8080/inlife/api/data/Patient/"
                 + UUID
                 + "/QuestionnaireAnswers?q=QuestionnaireAnswers.authored,afterEq,"
