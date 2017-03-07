@@ -17,6 +17,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.Executors;
@@ -72,7 +73,7 @@ public class DailyDataRetriever {
         thisMorning.set(Calendar.SECOND, 0);
 
         long thisMorningMillis = thisMorning.getTimeInMillis();
-        String UUID = "d4135cc8-6c9a-422d-9ba7-910db1e0fe5a";
+        String UUID = "7d0f8ede-8303-4605-8e04-cca90b2a3e3b";
 
         Runnable yourRunnable = new Runnable() {
             @Override
@@ -119,9 +120,9 @@ public class DailyDataRetriever {
             dayToCompare = 1;
         }
 
-        if (monthDay == dayToCompare) { //if it's the 1st day of the month 00:00:01
-            getMonthlyData(today, thisMorningMillis, UUID);
-        }
+//        if (monthDay == dayToCompare) { //if it's the 1st day of the month 00:00:01
+//            getMonthlyData(today, thisMorningMillis, UUID);
+//        }
 
         Calendar yesterdayMorning = Calendar.getInstance();
         yesterdayMorning.add(Calendar.DATE, -1);
@@ -138,28 +139,108 @@ public class DailyDataRetriever {
         yesterdayNight.set(Calendar.SECOND, 0);
         long yesterdayNightMillis = yesterdayNight.getTimeInMillis();
 
-        String minutesWornDailyDay = getMeasurement(UUID, "ActivityRawType", yesterdayMorningMillis, yesterdayNightMillis);
-        String minutesWornDailyNight = getMeasurement(UUID, "ActivityRawType", yesterdayNightMillis, thisMorningMillis);
-        float percentageWornDailyDay = getMinutesWorn(minutesWornDailyDay);
-        float percentageWornDailyNight = getMinutesWorn(minutesWornDailyNight);
-
-        if (percentageWornDailyDay >= 0.75) { //get day data
-            String activityIntensityDataDailyDay = getMeasurement(UUID, "ActivityIntensity", yesterdayMorningMillis, yesterdayNightMillis);
-            getAverage(activityIntensityDataDailyDay); // [data] trim off the first array
-            String stepsPerMinuteDataDailyDay = getMeasurement(UUID, "ActivityStepsPerMinute", yesterdayNightMillis, thisMorningMillis);
-            getTotal(stepsPerMinuteDataDailyDay);
+//        String minutesWornDailyDay = getMeasurement(UUID, "ActivityRawType", yesterdayMorningMillis, yesterdayNightMillis);
+//        String minutesWornDailyNight = getMeasurement(UUID, "ActivityRawType", yesterdayNightMillis, thisMorningMillis);
+//        float percentageWornDailyDay = getMinutesWorn(minutesWornDailyDay);
+//        float percentageWornDailyNight = getMinutesWorn(minutesWornDailyNight);
+//
+//        if (percentageWornDailyDay >= 0.75) { //get day data
+//            String activityIntensityDataDailyDay = getMeasurement(UUID, "ActivityIntensity", yesterdayMorningMillis, yesterdayNightMillis);
+//            getAverage(activityIntensityDataDailyDay); // [data] trim off the first array
+//            String stepsPerMinuteDataDailyDay = getMeasurement(UUID, "ActivityStepsPerMinute", yesterdayNightMillis, thisMorningMillis);
+//            getTotal(stepsPerMinuteDataDailyDay);
+//        }
+//
+//        if (percentageWornDailyNight >= 0.75) { //get night data
+//            String activityIntensityDataDailyNight = getMeasurement(UUID, "ActivityIntensity", yesterdayNightMillis, thisMorningMillis);
+//            getAverage(activityIntensityDataDailyNight); // [data] trim off the first array
+//            String stepsPerMinuteDataDailyNight = getMeasurement(UUID, "ActivityStepsPerMinute", yesterdayNightMillis, thisMorningMillis);
+//            getTotal(stepsPerMinuteDataDailyNight);
+//        }
+//
+//        // get patient questionnaire answers every day.
+//        InputStream questionnaires = getQuestionnaires(UUID, yesterdayMorningMillis);
+//        parseQuestionnaires(questionnaires);
+        
+        String activityRawType = getMeasurement(UUID, "ActivityRawType", yesterdayNightMillis, thisMorningMillis);
+        getSleepQualityIndex(activityRawType);
+        
+        
+    }
+    
+    public void getSleepQualityIndex(String activityRawType) throws JSONException{
+        int sleepQualityCriteria = 0;
+        JSONObject JSONouter = new JSONObject(activityRawType);
+        JSONArray series = JSONouter.getJSONArray("series");
+        ArrayList<Integer> sleepTime = new ArrayList<Integer>();
+        int layOnBedTime = -1;
+        int minsNotAsleep = 0;
+        int minsNotAsleepSinceLayDown = 0;
+        int timesWoke = 0;
+        
+        //sleepTime(0) is the index of the first measurement of REM/NREM, and the last element is the index of the last measurement respectively
+        for (int i = 0; i < series.length(); i++) {
+            JSONObject measurement = series.getJSONObject(i);
+            String value = measurement.getString("value");
+            String timestamp = measurement.getString("timestamp");
+            if(value.equals("4.0")|| value.equals("5.0")){
+                sleepTime.add(i);
+            }
+        }
+        
+        System.out.println(sleepTime.get(0)+"..."+sleepTime.get(sleepTime.size()-1));
+        
+        //get last non silent measurement. That+1 is the index where the patient went to bed.
+        for(int j=sleepTime.get(0); j>=0; j--){
+//            System.out.println(series.getJSONObject(0).getString("value"));
+            if(!series.getJSONObject(j).getString("value").equals("4.0") && !series.getJSONObject(j).getString("value").equals("5.0") && !series.getJSONObject(j).getString("value").equals("0.0")){
+                layOnBedTime = j+1;
+                break;
+            }
+        }
+               
+//        System.out.println(sleepTime.get(0) - layOnBedTime);
+        if((sleepTime.get(0) - layOnBedTime)<=30){ //if it took <= 30 mins to fall asleep
+            sleepQualityCriteria+=1;
+        }
+        
+        //check the whole sleep span for awakenings
+        for(int k=sleepTime.get(0); k<=sleepTime.get(sleepTime.size()-1); k++){
+//            System.out.println(k);
+            if(!series.getJSONObject(k).getString("value").equals("4.0") && !series.getJSONObject(k).getString("value").equals("5.0")){
+                minsNotAsleep+=1;
+//                System.out.println(k);
+                if(series.getJSONObject(k-1).getString("value").equals("4.0") || series.getJSONObject(k-1).getString("value").equals("5.0")){
+                    timesWoke+=1;
+                }
+            }
+        }
+//        System.out.println(timesWoke);
+//        System.out.println(minsNotAsleep);
+        if(minsNotAsleep<=20){
+            sleepQualityCriteria+=1;
+        }
+        if(timesWoke<=1){
+            sleepQualityCriteria+=1;
         }
 
-        if (percentageWornDailyNight >= 0.75) { //get night data
-            String activityIntensityDataDailyNight = getMeasurement(UUID, "ActivityIntensity", yesterdayNightMillis, thisMorningMillis);
-            getAverage(activityIntensityDataDailyNight); // [data] trim off the first array
-            String stepsPerMinuteDataDailyNight = getMeasurement(UUID, "ActivityStepsPerMinute", yesterdayNightMillis, thisMorningMillis);
-            getTotal(stepsPerMinuteDataDailyNight);
+        for(int m=layOnBedTime; m<=sleepTime.get(sleepTime.size()-1); m++){
+            if(!series.getJSONObject(m).getString("value").equals("4.0") && !series.getJSONObject(m).getString("value").equals("5.0")){
+                minsNotAsleepSinceLayDown+=1;
+//                System.out.println(k);
+            }
         }
-
-        // get patient questionnaire answers every day.
-        InputStream questionnaires = getQuestionnaires(UUID, yesterdayMorningMillis);
-        parseQuestionnaires(questionnaires);
+//        System.out.println(minsNotAsleepSinceLayDown);
+        float sleepToWakeRatio =(float) minsNotAsleepSinceLayDown/(sleepTime.get(sleepTime.size()-1)-layOnBedTime);
+//        System.out.println(sleepToWakeRatio);
+        
+        if(sleepToWakeRatio<=0.15){
+            sleepQualityCriteria+=1;
+        }
+        
+        System.out.println(sleepQualityCriteria);
+                
+        
     }
 
     public void parseQuestionnaires(InputStream questionnaires) throws IOException {
