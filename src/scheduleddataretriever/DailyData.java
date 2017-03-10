@@ -109,7 +109,9 @@ public class DailyData {
             System.out.println("no data");
             return;
         }
+        
         int sleepQualityCriteria = 0;
+        
         JSONObject JSONouter = new JSONObject(activityRawType);
         JSONArray series = JSONouter.getJSONArray("series");
         ArrayList<Integer> sleepTime = new ArrayList<Integer>();
