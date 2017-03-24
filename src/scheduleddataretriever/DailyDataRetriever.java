@@ -43,8 +43,8 @@ public class DailyDataRetriever {
         thisMorning.set(Calendar.SECOND, 0);
 
         long thisMorningMillis = thisMorning.getTimeInMillis();
-        String UUID = "7d0f8ede-8303-4605-8e04-cca90b2a3e3b";
-
+        String UUID = "6ea6995e-f011-4277-92ce-d1342ca7c121";
+//        ddr.getDailyData(debugMode, thisMorningMillis, UUID);
         Runnable yourRunnable = new Runnable() {
             @Override
             public void run() {

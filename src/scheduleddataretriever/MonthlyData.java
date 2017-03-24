@@ -44,10 +44,37 @@ public class MonthlyData {
         float[] percentageWornMonthly = getMinutesWornMonthly(minutesWornMonthly);
 
         String activityIntensityDataMonthly = this.ut.getMeasurement(UUID, "ActivityIntensity", startOfMonthMillis, this.thisMorningMillis);
-        this.ut.getAverageMonthly(percentageWornMonthly, activityIntensityDataMonthly); // [data] trim off the first array
+        double[] monthlyActivityIntensity = this.ut.getAverageMonthly(percentageWornMonthly, activityIntensityDataMonthly); // [data] trim off the first array
+        
+        TurtleTemplate tt = new TurtleTemplate();
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(startOfMonthMillis);
+        int month = cal.get(Calendar.MONTH) +1; //month indexing starts from 0
+        String monthString = "";
+        if (month<10){
+            monthString = "0"+String.valueOf(month);
+        } else{
+            monthString = String.valueOf(month);
+        }
+        int year = cal.get(Calendar.YEAR);
+        String date = year+"-"+monthString;
+        
+        String dayDataAIS = tt.prepareValueTemplate("ActivityIntensityStats", date, "ObservationMethods_DIURNAL", "ObservationMethods_AVERAGE", String.valueOf(monthlyActivityIntensity[0]), UUID);
+        this.ut.sendPOST("http://inlife-1.inab.certh.gr:8080/inlife/api/data/ActivityIntensityStats", dayDataAIS);
+        String nightDataAIS = tt.prepareValueTemplate("ActivityIntensityStats", date, "ObservationMethods_NOCTURNAL", "ObservationMethods_AVERAGE", String.valueOf(monthlyActivityIntensity[1]), UUID);
+        this.ut.sendPOST("http://inlife-1.inab.certh.gr:8080/inlife/api/data/ActivityIntensityStats", nightDataAIS);
+        
+        
+        
+        
         String stepsPerMinuteDataMonthly = this.ut.getMeasurement(UUID, "ActivityStepsPerMinute", startOfMonthMillis, this.thisMorningMillis);
-        this.ut.getTotalMonthly(percentageWornMonthly, stepsPerMinuteDataMonthly);
-
+        double[] monthlySteps = this.ut.getTotalMonthly(percentageWornMonthly, stepsPerMinuteDataMonthly);
+        
+        String dayDataSteps = tt.prepareValueTemplate("Steps", date, "ObservationMethods_DIURNAL", "ObservationMethods_SUM", String.valueOf(monthlySteps[0]), UUID);
+        this.ut.sendPOST("http://inlife-1.inab.certh.gr:8080/inlife/api/data/Steps", dayDataSteps);
+        String nightDataSteps = tt.prepareValueTemplate("Steps", date, "ObservationMethods_NOCTURNAL", "ObservationMethods_SUM", String.valueOf(monthlySteps[1]), UUID);
+        this.ut.sendPOST("http://inlife-1.inab.certh.gr:8080/inlife/api/data/Steps", nightDataSteps);
+        
     }
     
     

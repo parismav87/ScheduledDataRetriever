@@ -74,18 +74,22 @@ public class DailyData {
         DayTimeData dtd = new DayTimeData(UUID);
         if (percentageWornDailyDay >= 0.75) { //get day data
             dtd.getDayTimeData(yesterdayMorningMillis, yesterdayNightMillis);
+        } else {
+            System.out.println("daytime data not sufficient");
         }
         
         NightTimeData ntd = new NightTimeData(UUID);
         if (percentageWornDailyNight >= 0.75) { //get night data
             ntd.getNightTimeData(yesterdayNightMillis, thisMorningMillis);
+        } else {
+            System.out.println("nighttime data not sufficient");
         }
 
         QuestionnaireData qd = new QuestionnaireData(UUID);
         qd.getAbnormalQuestionnaireAnswers(yesterdayMorningMillis);
         // get patient questionnaire answers every day.
 
-        SleepQualityIndex sqi = new SleepQualityIndex(UUID);
+        SleepQualityIndex sqi = new SleepQualityIndex(UUID, thisMorningMillis);
         String activityRawType = this.ut.getMeasurement(UUID, "ActivityRawType", yesterdayNightMillis, thisMorningMillis);
         sqi.getSleepQualityIndex(activityRawType);
         
@@ -121,11 +125,11 @@ public class DailyData {
         count = count - sumNonCount;
 
         float percentageWorn = (float) sum / (float) count;
-        if (percentageWorn >= 0.75) {
-            System.out.println("worn long enough  " + percentageWorn);
-        } else {
-            System.out.println("not enough  " + percentageWorn);
-        }
+//        if (percentageWorn >= 0.75) {
+//            System.out.println("worn long enough  " + percentageWorn);
+//        } else {
+//            System.out.println("not enough  " + percentageWorn);
+//        }
 
         return percentageWorn;
     }

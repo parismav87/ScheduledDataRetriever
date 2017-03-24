@@ -6,7 +6,6 @@
 package scheduleddataretriever;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -15,19 +14,19 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import org.apache.commons.io.IOUtils;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.vocabulary.RDF;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import gr.auth.med.lomi.beredim.util.jerseyturtle.TurtleMessageBodyReaderWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -39,6 +38,8 @@ public class Utilities {
     public Utilities(){
         
     }
+    
+    static Logger LOGGER = LoggerFactory.getLogger(Utilities.class);   
     
     
     String getMeasurement(String UUID, String measurement, long start, long end) throws IOException {
@@ -66,7 +67,7 @@ public class Utilities {
     }
     
     
-    public void getAverage(String response) throws JSONException {
+    public double getAverage(String response) throws JSONException {
         double sum = 0;
 
         JSONObject JSONouter = new JSONObject(response);
@@ -79,11 +80,12 @@ public class Utilities {
             String timestamp = measurement.getString("timestamp");
             sum += Double.valueOf(value);
         }
-        System.out.println("average");
-        System.out.println(sum / count);
+//        System.out.println("average");
+//        System.out.println(sum / count);
+        return sum/count;
     }
 
-    public void getAverageMonthly(float[] percentageWorn, String response) throws JSONException {
+    public double[] getAverageMonthly(float[] percentageWorn, String response) throws JSONException {
         double sumDay = 0;
         double sumNight = 0;
         int countDay = 0;
@@ -109,16 +111,18 @@ public class Utilities {
                 countNight += 1;
             }
         }
-        System.out.println("average monthly");
-        System.out.println(sumDay / countDay);
-        System.out.println(sumNight / countNight);
+//        System.out.println("average monthly");
+//        System.out.println(sumDay / countDay);
+//        System.out.println(sumNight / countNight);
+        double[] results = {sumDay/countDay, sumNight/countNight};
+        return results;
     }
 
-    public void getTotal(String response) throws JSONException {
+    public double getTotal(String response) throws JSONException {
  
         if(response.trim().equals("")){
             System.out.println("no data");
-            return ;
+            return 0;
         }
         double sum = 0;
  
@@ -131,11 +135,12 @@ public class Utilities {
             String timestamp = measurement.getString("timestamp");
             sum += Double.valueOf(value);
         }
-        System.out.println("total");
-        System.out.println(sum);
+//        System.out.println("total");
+//        System.out.println(sum);
+        return sum;
     }
 
-    public void getTotalMonthly(float[] percentageWorn, String response) throws JSONException {
+    public double[] getTotalMonthly(float[] percentageWorn, String response) throws JSONException {
         double sumDay = 0;
         double sumNight = 0;
 
@@ -157,9 +162,11 @@ public class Utilities {
                 sumNight += Double.parseDouble(value);
             }
         }
-        System.out.println("total Monthly");
-        System.out.println(sumDay);
-        System.out.println(sumNight);
+//        System.out.println("total Monthly");
+//        System.out.println(sumDay);
+//        System.out.println(sumNight);
+        double[] results = {sumDay, sumNight};
+        return results;
     }
     
     
@@ -189,4 +196,40 @@ public class Utilities {
         }
 
     }
+    
+    
+    public static void sendPOST(String url, String turtle) {
+        System.out.println("sending POST....   "+ url);
+//        System.out.println(turtle);
+        Client client = null;
+        try{
+//            client = ClientBuilder.newBuilder().register(TurtleMessageBodyReaderWriter.class).build();
+            client = ClientBuilder.newBuilder().build();
+        } catch(Exception e ){
+            e.printStackTrace();
+        }
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("welk", "welk");
+        client.register(feature);
+        Response response = client.target(url).request().post(Entity.entity(turtle, "text/turtle"));
+        int responseStatus = response.getStatus();
+        System.out.println(responseStatus);
+        switch (Response.Status.fromStatusCode(responseStatus)) {
+            case OK:
+                System.out.println("OK");
+                break;
+            case CREATED:
+                System.out.println("CREATED");
+                break;
+            case NO_CONTENT:
+                System.out.println("NO CONTENT");
+                break;
+            default:
+                String errorMessage = response.readEntity(String.class);
+                System.out.println(errorMessage);
+                        //throw new SparqlGraphStoreException(errorMessage, responseStatus);
+            //break;
+        }
+        return;
+    }
+    
 }
